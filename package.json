@@ -1,0 +1,33 @@
+{
+  "name": "dbt",
+  "version": "0.1.0",
+  "description": "Database Shell Toolkit",
+  "main": "bin/dbt",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/twg/dbt.git"
+  },
+  "keywords": [
+    "database",
+    "toolkit",
+    "postgres",
+    "mysql"
+  ],
+  "author": "Scott Tadman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/twg/dbt/issues"
+  },
+  "homepage": "https://github.com/twg/dbt",
+  "devDependencies": {
+    "mocha": "^1.18.2"
+  },
+  "dependencies": {
+    "commander": "^2.2.0",
+    "kexec": "^0.2.0",
+    "yaml-js": "0.0.8"
+  }
+}

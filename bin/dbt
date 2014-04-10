@@ -1,0 +1,206 @@
+#!/usr/bin/env node
+
+var spawn = require('child_process').spawn;
+var path = require('path');
+var fs = require('fs');
+
+var snapshotDirDefault = path.resolve(__dirname, '../snapshots');
+
+var configNames = [
+  'config/database.json',
+  'config/database.yml',
+  'config/database.yaml'
+];
+
+var envNames = [
+  'NODE_ENV',
+  'RACK_ENV',
+  'RAILS_ENV'
+];
+
+// == Support Methods =======================================================
+
+function relativePath(fullPath) {
+  if (!fullPath) {
+    return fullPath;
+  }
+
+  var cwd = process.cwd();
+
+  if (fullPath.substr(0, cwd.length) === cwd) {
+    return fullPath.substr(cwd.length + 1, fullPath.length);
+  }
+
+  return fullPath;
+}
+
+function defaultEnv() {
+  var env;
+
+  envNames.forEach(function(name) {
+    if (process.env[name] && !env) {
+      env = process.env[name];
+    }
+  })
+
+  return env || 'development';
+}
+
+function findConfig() {
+  var dir;
+  var pdir;
+  var foundConfigPath;
+
+  for (var dir = process.cwd(); dir != pdir; dir = path.resolve(dir, '..')) {
+    configNames.forEach(function(configName) {
+      var configPath = path.resolve(dir, configName);
+
+      if (fs.existsSync(configPath)) {
+        foundConfigPath = configPath;
+      }
+    })
+
+    if (foundConfigPath) {
+      return foundConfigPath;
+    }
+
+    pdir = dir;
+  }
+}
+
+function readConfigYAML(configPath, env) {
+  var YAML = require('yaml-js');
+
+  var data = YAML.load(fs.readFileSync(configPath));
+
+  return data && data[env];
+}
+
+function readConfigJSON(configPath, env) {
+  var data = JSON.parse(fs.readFileSync(configPath));
+
+  return data && data[env];
+}
+
+function readConfig(configPath, env) {
+  switch (path.extname(configPath)) {
+    case '.yaml':
+    case '.yml':
+      return readConfigYAML(configPath, env);
+      break;
+    case '.json':
+      return readConfigJSON(configPath, env);
+      break;
+  }
+}
+
+function mostRecentSnapshotPath(dir) {
+  var mostRecent;
+  var highestTimestamp = 0;
+
+  fs.readdirSync(dir).forEach(function(file) {
+    var timestamp = parseInt(file.split('.')[1]);
+
+    if (timestamp > highestTimestamp) {
+      mostRecent = path.resolve(dir, file);
+    }
+  })
+
+  return mostRecent;
+}
+
+function currentSnapshotPath(dir, dbName) {
+  return path.resolve(dir, dbName + '.' + Math.floor(new Date().getTime() / 1000) + '.dump')
+}
+
+// == Main ==================================================================
+
+var configPathDefault = findConfig();
+var snapshotsDirDefault = path.resolve(configPathDefault, '../..', 'db/snapshots');
+
+var options = require('commander').
+  option('--snapshot', 'Snapshot the current database').
+  option('--restore', 'Restore the current database').
+  option('--database [database]', 'Database to snapshot from or restore to').
+  option('--env [env]', 'Use a specific environment', defaultEnv()).
+  option('--config [config]', 'Configuration file path', configPathDefault).
+  option('--dir [dir]', 'Snapshot directory path to save to or read from', snapshotsDirDefault).
+  option('--file [file]', 'Filename to read from or save to').
+  option('--info', 'Show the current configuration and exit').
+  parse(process.argv)
+
+// FIX: Read database.json or database.yml
+var snapshotDir = options.dir || snapshotDirDefault;
+
+if (!fs.existsSync(options.config)) {
+  console.error("Could not find a configuration file to read.");
+  process.exit(-12);
+}
+
+var config = readConfig(options.config, options.env);
+
+if (!config) {
+  console.error("Could not find configuration for environment '" + options.env + "' in config file '" + options.config + "'");
+  process.exit(-12);
+}
+
+options.database = options.database || config.database;
+
+if (!options.database) {
+  console.error("Could not determine which database to use");
+  process.exit(-11);
+}
+
+if (options.info) {
+  console.log('Detected Configuration')
+  console.log('------------------------------------------------')
+  console.log('Config Path: ' + relativePath(options.config))
+  console.log('        Env: ' + options.env)
+  console.log('   Database: ' + options.database)
+  console.log('  Snapshots: ' + relativePath(options.dir))
+  process.exit(0);
+}
+
+if (options.snapshot) {
+  var snapshotFile = options.file || currentSnapshotPath(snapshotDir, options.database) 
+
+  var pg_dump = spawn('pg_dump', [
+    '--compress=9',
+    '--format=custom',
+    '--no-owner',
+    '--no-privileges',
+    '--no-security-labels',
+    '--use-set-session-authorization',
+    '--file', snapshotFile,
+    options.database
+  ]);
+
+  pg_dump.stderr.on('data', function(data) {
+    console.error(data.toString())
+  });
+}
+else if (options.restore) {
+  snapshotFile = options.file || mostRecentSnapshotPath(snapshotDir)
+
+  var pg_restore = spawn('pg_restore', [
+    '--clean',
+    '--format=custom',
+    '--no-owner',
+    '--no-privileges',
+    '--no-security-labels',
+    '--use-set-session-authorization',
+    '--dbname', options.database,
+    snapshotFile,
+  ]);
+
+  pg_restore.stderr.on('data', function(data) {
+    console.error(data.toString())
+  });
+}
+else {
+  var kexec = require('kexec');
+
+  var psql = kexec('psql', [
+    '--dbname', options.database,
+  ]);
+}
