@@ -110,7 +110,35 @@ function mostRecentSnapshotPath(dir) {
 }
 
 function currentSnapshotPath(dir, dbName) {
-  return path.resolve(dir, dbName + '.' + Math.floor(new Date().getTime() / 1000) + '.dump')
+  return path.resolve(dir, dbName + '.' + Math.floor(new Date().getTime() / 1000) + '.dump');
+}
+
+function authArguments(options) {
+  var args = [ ];
+
+  if (options.username) {
+    args.push('--username');
+    args.push(options.username);
+  }
+
+  if (options.host) {
+    args.push('--host');
+    args.push(options.host);
+  }
+
+  if (options.password) {
+    process.env.PGPASSWORD = options.password;
+  }
+}
+
+function commonArguments() {
+  return [
+    '--format=custom',
+    '--no-owner',
+    '--no-privileges',
+    '--no-security-labels',
+    '--use-set-session-authorization'
+  ];
 }
 
 // == Main ==================================================================
@@ -154,26 +182,37 @@ if (!options.database) {
 if (options.info) {
   console.log('Detected Configuration')
   console.log('------------------------------------------------')
-  console.log('Config Path: ' + relativePath(options.config))
-  console.log('        Env: ' + options.env)
-  console.log('   Database: ' + options.database)
-  console.log('  Snapshots: ' + relativePath(options.dir))
+  console.log('Config Path: ' + relativePath(options.config));
+  console.log('        Env: ' + options.env);
+
+  if (options.host) {
+    console.log('       Host: ' + options.host);
+  }
+
+  if (options.username) {
+    console.log('   Username: ' + options.username);
+  }
+
+  if (options.password) {
+    console.log('   Password: ' + options.password.replace(/./, '*'));
+  }
+
+  console.log('   Database: ' + options.database);
+  console.log('  Snapshots: ' + relativePath(options.dir));
   process.exit(0);
 }
 
 if (options.snapshot) {
   var snapshotFile = options.file || currentSnapshotPath(snapshotDir, options.database) 
 
-  var pg_dump = spawn('pg_dump', [
-    '--compress=9',
-    '--format=custom',
-    '--no-owner',
-    '--no-privileges',
-    '--no-security-labels',
-    '--use-set-session-authorization',
-    '--file', snapshotFile,
-    options.database
-  ]);
+  var pg_dump = spawn(
+    'pg_dump',
+    authArguments(options) + commonArguments() + [
+      '--compress=9',
+      '--file', snapshotFile,
+      options.database
+    ]
+  );
 
   pg_dump.stderr.on('data', function(data) {
     console.error(data.toString())
@@ -182,16 +221,14 @@ if (options.snapshot) {
 else if (options.restore) {
   snapshotFile = options.file || mostRecentSnapshotPath(snapshotDir)
 
-  var pg_restore = spawn('pg_restore', [
-    '--clean',
-    '--format=custom',
-    '--no-owner',
-    '--no-privileges',
-    '--no-security-labels',
-    '--use-set-session-authorization',
-    '--dbname', options.database,
-    snapshotFile,
-  ]);
+  var pg_restore = spawn(
+    'pg_restore',
+    authArguments(options) + commonArguments() + [
+      '--clean',
+      '--dbname', options.database,
+      snapshotFile,
+    ]
+  );
 
   pg_restore.stderr.on('data', function(data) {
     console.error(data.toString())
