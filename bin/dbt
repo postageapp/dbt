@@ -207,7 +207,7 @@ if (options.snapshot) {
 
   var pg_dump = spawn(
     'pg_dump',
-    authArguments(options) + commonArguments() + [
+    authArguments(config) + commonArguments() + [
       '--compress=9',
       '--file', snapshotFile,
       options.database
@@ -223,7 +223,7 @@ else if (options.restore) {
 
   var pg_restore = spawn(
     'pg_restore',
-    authArguments(options) + commonArguments() + [
+    authArguments(config) + commonArguments() + [
       '--clean',
       '--dbname', options.database,
       snapshotFile,
