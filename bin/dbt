@@ -230,9 +230,9 @@ else if (options.restore) {
   var pg_restore = spawn(
     'pg_restore',
     authArguments(options).concat(commonArguments()).concat([
+      '--dbname', options.database,
       '--clean',
       '--create',
-      '--dbname', options.database,
       snapshotFile,
     ])
   );
