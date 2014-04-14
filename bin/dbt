@@ -129,6 +129,8 @@ function authArguments(options) {
   if (options.password) {
     process.env.PGPASSWORD = options.password;
   }
+
+  return args;
 }
 
 function commonArguments() {
@@ -144,17 +146,18 @@ function commonArguments() {
 // == Main ==================================================================
 
 var configPathDefault = findConfig();
-var snapshotsDirDefault = path.resolve(configPathDefault, '../..', 'db/snapshots');
+var snapshotsDirDefault = configPathDefault && path.resolve(configPathDefault, '../..', 'db/snapshots');
 
 var options = require('commander').
-  option('--snapshot', 'Snapshot the current database').
-  option('--restore', 'Restore the current database').
-  option('--database [database]', 'Database to snapshot from or restore to').
-  option('--env [env]', 'Use a specific environment', defaultEnv()).
-  option('--config [config]', 'Configuration file path', configPathDefault).
-  option('--dir [dir]', 'Snapshot directory path to save to or read from', snapshotsDirDefault).
-  option('--file [file]', 'Filename to read from or save to').
-  option('--info', 'Show the current configuration and exit').
+  option('-s --snapshot', 'Snapshot the current database').
+  option('-r --restore', 'Restore the current database').
+  option('-d --database [database]', 'Database to snapshot from or restore to').
+  option('-e --env [env]', 'Use a specific environment', defaultEnv()).
+  option('-c --config [config]', 'Configuration file path', configPathDefault).
+  option('-p --dir [dir]', 'Snapshot directory path to save to or read from', snapshotsDirDefault).
+  option('-f --file [file]', 'Filename to read from or save to').
+  option('-i --info', 'Show the current configuration and exit').
+  version(require('../package.json').version).
   parse(process.argv)
 
 // FIX: Read database.json or database.yml
@@ -172,6 +175,9 @@ if (!config) {
   process.exit(-12);
 }
 
+options.username = options.username || config.username;
+options.password = options.password || config.password;
+options.host = options.host || config.host;
 options.database = options.database || config.database;
 
 if (!options.database) {
@@ -207,11 +213,11 @@ if (options.snapshot) {
 
   var pg_dump = spawn(
     'pg_dump',
-    authArguments(config) + commonArguments() + [
+    authArguments(options).concat(commonArguments()).concat([
       '--compress=9',
       '--file', snapshotFile,
       options.database
-    ]
+    ])
   );
 
   pg_dump.stderr.on('data', function(data) {
@@ -223,11 +229,12 @@ else if (options.restore) {
 
   var pg_restore = spawn(
     'pg_restore',
-    authArguments(config) + commonArguments() + [
+    authArguments(options).concat(commonArguments()).concat([
       '--clean',
+      '--create',
       '--dbname', options.database,
       snapshotFile,
-    ]
+    ])
   );
 
   pg_restore.stderr.on('data', function(data) {
@@ -237,7 +244,10 @@ else if (options.restore) {
 else {
   var kexec = require('kexec');
 
-  var psql = kexec('psql', [
-    '--dbname', options.database,
-  ]);
+  var psql = kexec(
+    'psql',
+    authArguments(options).concat([
+      '--dbname', options.database,
+    ])
+  );
 }
