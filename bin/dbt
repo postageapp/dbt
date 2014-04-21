@@ -9,7 +9,8 @@ var snapshotDirDefault = path.resolve(__dirname, '../snapshots');
 var configNames = [
   'config/database.json',
   'config/database.yml',
-  'config/database.yaml'
+  'config/database.yaml',
+  'config/config.json'
 ];
 
 var envNames = [
