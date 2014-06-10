@@ -1,8 +1,15 @@
 #!/usr/bin/env node
 
-var spawn = require('child_process').spawn;
+// == Imports ===============================================================
+
+var child_process = require('child_process');
 var path = require('path');
 var fs = require('fs');
+
+var dbt = require('../lib/dbt');
+var sqlRewriter = require('../lib/dbt/sql_rewriter');
+
+// == Constants =============================================================
 
 var snapshotDirDefault = path.resolve(__dirname, '../snapshots');
 
@@ -20,6 +27,20 @@ var envNames = [
 ];
 
 // == Support Methods =======================================================
+
+function changeDatabaseName(options) {
+  var transform = stream.Transform();
+
+  return ;
+}
+
+function spawn(exec, args, options) {
+  if (options.log) {
+    console.log('# ' + [ exec ].concat(args).join(' '));
+  }
+
+  return child_process.spawn(exec, args);
+}
 
 function relativePath(fullPath) {
   if (!fullPath) {
@@ -104,6 +125,7 @@ function mostRecentSnapshotPath(dir) {
 
     if (timestamp > highestTimestamp) {
       mostRecent = path.resolve(dir, file);
+      highestTimestamp = timestamp;
     }
   })
 
@@ -112,6 +134,10 @@ function mostRecentSnapshotPath(dir) {
 
 function currentSnapshotPath(dir, dbName) {
   return path.resolve(dir, dbName + '.' + Math.floor(new Date().getTime() / 1000) + '.dump');
+}
+
+function currentStructurePath(dir, dbName) {
+  return path.resolve(dir, dbName + '.' + Math.floor(new Date().getTime() / 1000) + '.sql');
 }
 
 function authArguments(options) {
@@ -144,13 +170,103 @@ function commonArguments() {
   ];
 }
 
+function restoreFromDump(dumpPath, options) {
+  var pg_restore = spawn(
+    'pg_restore',
+    commonArguments().concat([
+      dumpPath,
+    ]),
+    options
+  );
+
+  var psql = spawn(
+    'psql',
+    authArguments(options),
+    options
+  );
+
+  pg_restore.stderr.on('data', function(data) {
+    console.error(data.toString());
+  });
+
+  pg_restore.stdout.pipe(
+    sqlRewriter(options)
+  ).pipe(
+    psql.stdin
+  );
+
+  psql.stderr.on('data', function(data) {
+    console.error(data.toString());
+  });
+
+  return pg_restore.stderr;
+}
+
+function restoreFromSql(dumpPath, options) {
+  var psql = spawn(
+    'psql',
+    authArguments(options),
+    options
+  );
+
+  fs.FileReadStream(dumpPath).pipe(
+
+  )
+}
+
+function execPsql(options) {
+  var kexec = require('kexec');
+
+  kexec(
+    'psql',
+    authArguments(options).concat([
+      '--dbname', options.database,
+    ])
+  );
+}
+
+function snapshotCreate(snapshotPath, options) {
+  var pg_dump = spawn(
+    'pg_dump',
+    authArguments(options).concat(commonArguments()).concat([
+      '--compress=9',
+      '--file', snapshotFile,
+      options.database
+    ]),
+    options
+  );
+
+  pg_dump.stderr.on('data', function(data) {
+    console.error(data.toString())
+  });
+
+  return pg_dump.stderr;
+}
+
+function structureCreate(structureFile, options) {
+  var pg_dump = spawn(
+    'pg_dump',
+    authArguments(options).concat([
+      '--ignore-version',
+      '--schema-only',
+      '--no-privileges',
+      '--no-acl',
+      '--no-owner',
+      '--file', structureFile,
+      options.database
+    ]),
+    options
+  );
+}
+
 // == Main ==================================================================
 
 var configPathDefault = findConfig();
 var snapshotsDirDefault = configPathDefault && path.resolve(configPathDefault, '../..', 'db/snapshots');
 
 var options = require('commander').
-  option('-s --snapshot', 'Snapshot the current database').
+  option('-s --snapshot', 'Snapshot the current database structure and data').
+  option('-t --structure', 'Snapshot the current database structure').
   option('-r --restore', 'Restore the current database').
   option('-d --database [database]', 'Database to snapshot from or restore to').
   option('-e --env [env]', 'Use a specific environment', defaultEnv()).
@@ -158,8 +274,13 @@ var options = require('commander').
   option('-p --dir [dir]', 'Snapshot directory path to save to or read from', snapshotsDirDefault).
   option('-f --file [file]', 'Filename to read from or save to').
   option('-i --info', 'Show the current configuration and exit').
+  option('-l --log', 'Log which commands are executed').
   version(require('../package.json').version).
-  parse(process.argv)
+  parse(process.argv);
+
+if (options.args) {
+  options.file = options.args[0];
+}
 
 // FIX: Read database.json or database.yml
 var snapshotDir = options.dir || snapshotDirDefault;
@@ -210,45 +331,28 @@ if (options.info) {
 }
 
 if (options.snapshot) {
-  var snapshotFile = options.file || currentSnapshotPath(snapshotDir, options.database) 
+  var snapshotFile = options.file || currentSnapshotPath(snapshotDir, options.database);
 
-  var pg_dump = spawn(
-    'pg_dump',
-    authArguments(options).concat(commonArguments()).concat([
-      '--compress=9',
-      '--file', snapshotFile,
-      options.database
-    ])
-  );
+  snapshotCreate(snapshotFile, options);
+}
+else if (options.structure) {
+  var structureFile = options.file || currentStructurePath(snapshotDir, options.database);
 
-  pg_dump.stderr.on('data', function(data) {
-    console.error(data.toString())
-  });
+  structureCreate(structureFile, options);
 }
 else if (options.restore) {
   snapshotFile = options.file || mostRecentSnapshotPath(snapshotDir)
 
-  var pg_restore = spawn(
-    'pg_restore',
-    authArguments(options).concat(commonArguments()).concat([
-      '--dbname', options.database,
-      '--clean',
-      '--create',
-      snapshotFile,
-    ])
-  );
-
-  pg_restore.stderr.on('data', function(data) {
-    console.error(data.toString())
-  });
+  switch (path.extname(snapshotFile))
+  {
+    case '.dump':
+      restoreFromDump(snapshotFile, options);
+      break;
+    case '.sql':
+      restoreFromSql(snapshotFile, options);
+      break;
+  }
 }
 else {
-  var kexec = require('kexec');
-
-  var psql = kexec(
-    'psql',
-    authArguments(options).concat([
-      '--dbname', options.database,
-    ])
-  );
+  execPsql(options);
 }

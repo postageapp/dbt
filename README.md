@@ -18,17 +18,38 @@ To create a snapshot:
 
     dbt --snapshot
 
-To restore from the most recent snapshot:
+To restore from the most recent snapshot, based on timestamp on file:
 
     dbt --restore
 
 To restore from a specific snapshot:
 
-    dbt --restore --file=db/snapshots/my_database.dump
+    dbt --restore db/snapshots/my_database.dump
 
-## Caveats
+By default the snapshots are stored in `db/snapshots` but they can be saved
+anywhere if the path is specified.
 
-This is a very early version of the tool.
+To find out what configuration is being used:
+
+    dbt --info
+
+To find out what configuration is being used in a particular environment:
+
+    dbt --env test --info
+
+## Configuration
+
+The connection configuration is read from `config/` in the form of a
+`database.yml` ([Ruby on Rails](http://rubyonrails.com/)) or
+`database.json` ([Sequelize](http://sequelizejs.com/)) file.
+
+## Notes
+
+Often saving and restoring PostgreSQL database snapshots takes a little work
+to get things to line up correctly. `dbt` should handle most of that for you.
+
+The ownership is automatically changed to whatever `username` is defined in
+the database configuration.
 
 ## Copyright
 

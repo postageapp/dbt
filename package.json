@@ -1,6 +1,6 @@
 {
   "name": "dbt",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Database Shell Toolkit",
   "main": "bin/dbt",
   "scripts": {
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/twg/dbt",
   "devDependencies": {
+    "chai": "^1.9.1",
     "mocha": "^1.18.2"
   },
   "dependencies": {
