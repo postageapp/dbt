@@ -7,7 +7,7 @@ var path = require('path');
 var fs = require('fs');
 
 var dbt = require('../lib/dbt');
-var sqlRewriter = require('../lib/dbt/sql_rewriter');
+var sqlRewriter = require('../lib/dbt/pg/sql_rewriter');
 
 // == Constants =============================================================
 
