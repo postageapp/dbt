@@ -43,6 +43,12 @@ The connection configuration is read from `config/` in the form of a
 `database.yml` ([Ruby on Rails](http://rubyonrails.com/)) or
 `database.json` ([Sequelize](http://sequelizejs.com/)) file.
 
+**NOTE**: You will need to be able to connect to the default Postgres database
+for your user if you want to be able to drop and restore databases from
+snapshots. If you can run the `psql` command successfully without any
+options, and that role has the ability to create and drop databases, it should
+work.
+
 ## Notes
 
 Often saving and restoring PostgreSQL database snapshots takes a little work
