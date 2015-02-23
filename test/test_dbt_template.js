@@ -10,7 +10,7 @@ describe('dbt', function() {
   describe('template', function() {
     describe('load()', function() {
       it('should load in a given template', function() {
-        var loaded = template.load('connect.sql');
+        var loaded = template.load('postgresql/connect.sql');
 
         assert.ok(loaded);
 

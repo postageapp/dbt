@@ -2,7 +2,7 @@ var fs = require('fs');
 var path = require('path');
 
 var helper = require('./helper');
-var escape = require('../lib/dbt/escape');
+var escape = require('../lib/dbt/template/escape');
 
 var assert = helper.assert;
 

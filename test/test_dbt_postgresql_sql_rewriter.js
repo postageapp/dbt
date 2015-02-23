@@ -2,7 +2,7 @@ var fs = require('fs');
 var path = require('path');
 
 var helper = require('./helper');
-var sqlRewriter = require('../lib/dbt/sql_rewriter');
+var sqlRewriter = require('../lib/dbt/postgresql/sql_rewriter');
 
 var assert = helper.assert;
 

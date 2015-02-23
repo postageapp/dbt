@@ -1,6 +1,6 @@
 {
   "name": "dbt",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Database Shell Toolkit",
   "main": "bin/dbt",
   "bin" : {
@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "commander": "^2.2.0",
-    "kexec": "^0.2.0",
     "yaml-js": "0.0.8"
   }
 }
