@@ -49,6 +49,10 @@ snapshots. If you can run the `psql` command successfully without any
 options, and that role has the ability to create and drop databases, it should
 work.
 
+## Compatibility
+
+Full support for PostgreSQL, partial support for MySQL.
+
 ## Notes
 
 Often saving and restoring PostgreSQL database snapshots takes a little work
@@ -59,7 +63,7 @@ the database configuration.
 
 ## Copyright
 
-(C) 2014 Scott Tadman, The Working Group Inc. and other contributors.
+(C) 2014-2015 Scott Tadman, The Working Group Inc. and other contributors.
 
 Using the [MIT License](http://opensource.org/licenses/MIT) as described in
 the [`LICENSE`](LICENSE) file.
