@@ -173,7 +173,7 @@ options.username = options.username || config.username;
 options.password = options.password || config.password;
 options.host = options.host || config.host;
 options.database = options.database || config.database;
-options.adapter = options.adapter || config.adapter;
+options.adapter = options.adapter || config.adapter || config.dialect || config.protocol;
 
 switch (options.adapter) {
   case 'postgis':
@@ -186,7 +186,7 @@ switch (options.adapter) {
 }
 
 // FIX: Whitelist adapter.
-var handler = require('../lib/dbt/' + options.adapter + '/handler');
+var handler = options.adapter && require('../lib/dbt/' + options.adapter + '/handler');
 
 if (!options.database) {
   console.error("Could not determine which database to use");
