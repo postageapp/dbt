@@ -250,7 +250,7 @@ else if (options.structure) {
 else if (options.restore) {
   var snapshotFile = options.file || mostRecentSnapshotPath(snapshotDir)
 
-  handler.restore(snapshotFile);
+  handler.snapshotRestore(snapshotFile, options);
 }
 else {
   handler.shell(options);
