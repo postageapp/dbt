@@ -248,7 +248,7 @@ else if (options.structure) {
   handler.structureCreate(structureFile, options);
 }
 else if (options.restore) {
-  snapshotFile = options.file || mostRecentSnapshotPath(snapshotDir)
+  var snapshotFile = options.file || mostRecentSnapshotPath(snapshotDir)
 
   handler.restore(snapshotFile);
 }
