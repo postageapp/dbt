@@ -146,6 +146,7 @@ var options = require('commander').
   option('-l --log', 'Log which commands are executed').
   option('-a --adapter [adapter]', 'Use database adapter (postgresql|mysql)').
   option('-t --test', 'Test the current configuration').
+  option('-v --verbose', 'Run in verbose mode', false).
   version(require('../package.json').version).
   parse(process.argv);
 
