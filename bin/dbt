@@ -173,11 +173,13 @@ if (!config) {
 options.username = options.username || config.username;
 options.password = options.password || config.password;
 options.host = options.host || config.host;
+options.port = options.port || config.port;
 options.database = options.database || config.database;
 options.adapter = options.adapter || config.adapter || config.dialect || config.protocol;
 
 switch (options.adapter) {
   case 'postgis':
+  case 'jdbc:postgresql':
   case 'postgres':
     options.adapter = 'postgresql';
     break;
