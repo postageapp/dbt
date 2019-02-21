@@ -3,8 +3,8 @@
   "version": "0.4.6",
   "description": "Database Shell Toolkit",
   "main": "bin/dbt",
-  "bin" : {
-    "dbt" : "bin/dbt"
+  "bin": {
+    "dbt": "bin/dbt"
   },
   "scripts": {
     "test": "mocha"
@@ -26,11 +26,11 @@
   },
   "homepage": "https://github.com/twg/dbt",
   "devDependencies": {
-    "chai": "^1.9.1",
-    "mocha": "^1.18.2"
+    "chai": "^4.2.0",
+    "mocha": "^6.0.1"
   },
   "dependencies": {
-    "commander": "^2.2.0",
-    "yaml-js": "0.0.8"
+    "commander": "^2.19.0",
+    "yaml-js": "^0.2.3"
   }
 }
