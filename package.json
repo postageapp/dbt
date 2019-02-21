@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/twg/dbt.git"
+    "url": "https://github.com/postageapp/dbt.git"
   },
   "keywords": [
     "database",
@@ -22,9 +22,9 @@
   "author": "Scott Tadman",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/twg/dbt/issues"
+    "url": "https://github.com/postageapp/dbt/issues"
   },
-  "homepage": "https://github.com/twg/dbt",
+  "homepage": "https://github.com/postageapp/dbt",
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^6.0.1"
