@@ -2,21 +2,21 @@
 
 // == Imports ===============================================================
 
-var path = require('path');
-var fs = require('fs');
+const path = require('path');
+const fs = require('fs');
 
-var dbt = require('../lib/dbt');
+const dbt = require('../lib/dbt');
 
 // == Constants =============================================================
 
-var configNames = [
+const configNames = [
   'config/database.json',
   'config/database.yml',
   'config/database.yaml',
   'config/config.json'
 ];
 
-var envNames = [
+const envNames = [
   'NODE_ENV',
   'RACK_ENV',
   'RAILS_ENV'
@@ -25,7 +25,7 @@ var envNames = [
 // == Support Methods =======================================================
 
 function changeDatabaseName(options) {
-  var transform = stream.Transform();
+  let transform = stream.Transform();
 
   return ;
 }
@@ -35,7 +35,7 @@ function relativePath(fullPath) {
     return fullPath;
   }
 
-  var cwd = process.cwd();
+  let cwd = process.cwd();
 
   if (fullPath.substr(0, cwd.length) === cwd) {
     return fullPath.substr(cwd.length + 1, fullPath.length);
@@ -45,7 +45,7 @@ function relativePath(fullPath) {
 }
 
 function defaultEnv() {
-  var env;
+  let env;
 
   envNames.forEach(function(name) {
     if (process.env[name] && !env) {
@@ -57,13 +57,13 @@ function defaultEnv() {
 }
 
 function findConfig() {
-  var dir;
-  var pdir;
-  var foundConfigPath;
+  let dir;
+  let pdir;
+  let foundConfigPath;
 
-  for (var dir = process.cwd(); dir != pdir; dir = path.resolve(dir, '..')) {
+  for (let dir = process.cwd(); dir != pdir; dir = path.resolve(dir, '..')) {
     configNames.forEach(function(configName) {
-      var configPath = path.resolve(dir, configName);
+      let configPath = path.resolve(dir, configName);
 
       if (fs.existsSync(configPath)) {
         foundConfigPath = configPath;
@@ -79,15 +79,15 @@ function findConfig() {
 }
 
 function readConfigYAML(configPath, env) {
-  var YAML = require('yaml-js');
+  let YAML = require('yaml-js');
 
-  var data = YAML.load(fs.readFileSync(configPath));
+  let data = YAML.load(fs.readFileSync(configPath));
 
   return data && data[env];
 }
 
 function readConfigJSON(configPath, env) {
-  var data = JSON.parse(fs.readFileSync(configPath));
+  let data = JSON.parse(fs.readFileSync(configPath));
 
   return data && data[env];
 }
@@ -105,11 +105,11 @@ function readConfig(configPath, env) {
 }
 
 function mostRecentSnapshotPath(dir) {
-  var mostRecent;
-  var highestTimestamp = 0;
+  let mostRecent;
+  let highestTimestamp = 0;
 
   fs.readdirSync(dir).forEach(function(file) {
-    var timestamp = parseInt(file.split('.')[1]);
+    let timestamp = parseInt(file.split('.')[1]);
 
     if (timestamp > highestTimestamp) {
       mostRecent = path.resolve(dir, file);
@@ -130,10 +130,10 @@ function currentStructurePath(dir, dbName) {
 
 // == Main ==================================================================
 
-var configPathDefault = findConfig();
-var snapshotDirDefault = configPathDefault && path.resolve(configPathDefault, '../..', 'db/snapshots');
+let configPathDefault = findConfig();
+let snapshotDirDefault = configPathDefault && path.resolve(configPathDefault, '../..', 'db/snapshots');
 
-var options = require('commander').
+let options = require('commander').
   option('-s --snapshot', 'Snapshot the current database structure and data').
   option('-u --structure', 'Snapshot the current database structure').
   option('-r --restore', 'Restore the current database').
@@ -154,7 +154,7 @@ if (options.args) {
   options.file = options.args[0];
 }
 
-var snapshotDir = options.dir;
+let snapshotDir = options.dir;
 
 if (!fs.existsSync(options.config)) {
   console.error("Could not find a configuration file to read.");
@@ -162,7 +162,7 @@ if (!fs.existsSync(options.config)) {
   process.exit(-12);
 }
 
-var config = readConfig(options.config, options.env);
+let config = readConfig(options.config, options.env);
 
 if (!config) {
   console.error("Could not find configuration for environment '" + options.env + "' in config file '" + options.config + "'");
@@ -181,15 +181,17 @@ switch (options.adapter) {
   case 'postgis':
   case 'jdbc:postgresql':
   case 'postgres':
+  case 'pg':
     options.adapter = 'postgresql';
     break;
+  case 'jdbc:mysql':
   case 'mysql2':
     options.adapter = 'mysql';
     break;
 }
 
 // FIX: Whitelist adapter.
-var handler = options.adapter && require('../lib/dbt/' + options.adapter + '/handler');
+let handler = options.adapter && require('../lib/dbt/' + options.adapter + '/handler');
 
 if (!options.database) {
   console.error("Could not determine which database to use");
@@ -241,17 +243,17 @@ if (options.test) {
   });
 }
 else if (options.snapshot) {
-  var snapshotFile = options.file || currentSnapshotPath(snapshotDir, options.database);
+  let snapshotFile = options.file || currentSnapshotPath(snapshotDir, options.database);
 
   handler.snapshotCreate(snapshotFile, options);
 }
 else if (options.structure) {
-  var structureFile = options.file || currentStructurePath(snapshotDir, options.database);
+  let structureFile = options.file || currentStructurePath(snapshotDir, options.database);
 
   handler.structureCreate(structureFile, options);
 }
 else if (options.restore) {
-  var snapshotFile = options.file || mostRecentSnapshotPath(snapshotDir)
+  let snapshotFile = options.file || mostRecentSnapshotPath(snapshotDir)
 
   handler.snapshotRestore(snapshotFile, options);
 }
