@@ -27,10 +27,10 @@
   "homepage": "https://github.com/postageapp/dbt",
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^6.1.4"
+    "mocha": "^6.2.0"
   },
   "dependencies": {
-    "commander": "^2.19.0",
+    "commander": "^2.20.0",
     "yaml-js": "^0.2.3"
   }
 }
