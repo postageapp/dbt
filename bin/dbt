@@ -245,6 +245,7 @@ if (options.test) {
 else if (options.snapshot) {
   let snapshotFile = options.file || currentSnapshotPath(snapshotDir, options.database);
 
+  console.log(`Saving snapshot to ${snapshotFile}`);
   handler.snapshotCreate(snapshotFile, options);
 }
 else if (options.structure) {
