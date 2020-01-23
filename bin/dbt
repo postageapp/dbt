@@ -7,6 +7,8 @@ const fs = require('fs');
 
 const dbt = require('../lib/dbt');
 
+const adapterMapping = require('../lib/dbt/adapter').mapping;
+
 // == Constants =============================================================
 
 const configNames = [
@@ -83,7 +85,16 @@ function readConfigYAML(configPath, env) {
 
   let data = YAML.load(fs.readFileSync(configPath));
 
-  return data && data[env];
+  if (!data) {
+    return;
+  }
+
+  if (data[env] && data[env].primary) {
+    // ActiveRecord multi-database style definition
+    return data[env] && data[env].primary;
+  }
+
+  return data[env];
 }
 
 function readConfigJSON(configPath, env) {
@@ -177,20 +188,10 @@ options.port = options.port || config.port;
 options.database = options.database || config.database;
 options.adapter = options.adapter || config.adapter || config.dialect || config.protocol;
 
-switch (options.adapter) {
-  case 'postgis':
-  case 'jdbc:postgresql':
-  case 'postgres':
-  case 'pg':
-    options.adapter = 'postgresql';
-    break;
-  case 'jdbc:mysql':
-  case 'mysql2':
-    options.adapter = 'mysql';
-    break;
-}
+options.adapter = adapterMapping(options.adapter);
 
-// FIX: Whitelist adapter.
+// FIX: Whitelist adapter to avoid loading a non-existent file, or test that
+//      the file exists before loading.
 let handler = options.adapter && require('../lib/dbt/' + options.adapter + '/handler');
 
 if (!options.database) {

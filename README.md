@@ -63,7 +63,7 @@ the database configuration.
 
 ## Copyright
 
-(C) 2014-2019 Scott Tadman, PostageApp Ltd. and other contributors.
+(C) 2014-2020 Scott Tadman, PostageApp Ltd. and other contributors.
 
 Using the [MIT License](http://opensource.org/licenses/MIT) as described in
 the [`LICENSE`](LICENSE) file.
