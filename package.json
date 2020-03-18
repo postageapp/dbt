@@ -1,6 +1,6 @@
 {
   "name": "dbt",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Database Shell Toolkit",
   "main": "bin/dbt",
   "bin": {
