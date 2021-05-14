@@ -1,6 +1,6 @@
 {
   "name": "dbt",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "Database Shell Toolkit",
   "main": "bin/dbt",
   "bin": {
@@ -26,11 +26,11 @@
   },
   "homepage": "https://github.com/postageapp/dbt",
   "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^6.2.0"
+    "chai": "^4.3.4",
+    "mocha": "^8.4.0"
   },
   "dependencies": {
-    "commander": "^2.20.0",
+    "commander": "^7.2.0",
     "yaml-js": "^0.2.3"
   }
 }
