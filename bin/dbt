@@ -72,13 +72,16 @@ function findConfig() {
   let foundConfigPath;
 
   for (let dir = process.cwd(); dir != pdir; dir = path.resolve(dir, '..')) {
-    configNames.forEach(function(configName) {
+    let foundConfigPath;
+
+    configNames.forEach(configName => {
       let configPath = path.resolve(dir, configName);
 
       if (fs.existsSync(configPath)) {
         foundConfigPath = configPath;
       }
-    })
+    });
+
 
     if (foundConfigPath) {
       return foundConfigPath;
@@ -152,7 +155,7 @@ function currentStructurePath(dir, dbName) {
 let configPathDefault = findConfig();
 let snapshotDirDefault = configPathDefault && path.resolve(configPathDefault, '../..', 'db/snapshots');
 
-let options = require('commander').
+let program = require('commander').
   option('-s --snapshot', 'Snapshot the current database structure and data').
   option('-u --structure', 'Snapshot the current database structure').
   option('-r --restore', 'Restore the current database').
@@ -168,6 +171,8 @@ let options = require('commander').
   option('-v --verbose', 'Run in verbose mode', false).
   version(require('../package.json').version).
   parse(process.argv);
+
+let options = program.opts();
 
 if (options.args) {
   options.file = options.args[0];
