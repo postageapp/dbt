@@ -15,10 +15,18 @@ const configNames = [
   'config/database.json',
   'config/database.yml',
   'config/database.yaml',
-  'config/config.json'
+  'config/config.json',
+  '.config/database.json',
+  '.config/database.yml',
+  '.config/database.yaml',
+  '.config/config.json',
+  '.dbt-config.yaml',
+  '.dbt-config.yml',
+  '.dbt-config.json'
 ];
 
 const envNames = [
+  'DB_ENV',
   'NODE_ENV',
   'RACK_ENV',
   'RAILS_ENV'
