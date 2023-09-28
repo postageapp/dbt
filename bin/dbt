@@ -91,8 +91,10 @@ function findConfig() {
   }
 }
 
-function readConfigYAML(configPath, env) {
-  let YAML = require('yaml-js');
+function readConfigYAML(configPath, env, database) {
+  const YAML = require('yaml-js');
+
+  database ||= 'primary';
 
   let data = YAML.load(fs.readFileSync(configPath));
 
@@ -100,28 +102,25 @@ function readConfigYAML(configPath, env) {
     return;
   }
 
-  if (data[env] && data[env].primary) {
-    // ActiveRecord multi-database style definition
-    return data[env] && data[env].primary;
-  }
+  let database_env = data[env] && data[env][database];
 
-  return data[env];
+  return database_env || data[env];
 }
 
-function readConfigJSON(configPath, env) {
+function readConfigJSON(configPath, env, _database) {
   let data = JSON.parse(fs.readFileSync(configPath));
 
   return data && data[env];
 }
 
-function readConfig(configPath, env) {
+function readConfig(configPath, env, database) {
   switch (path.extname(configPath)) {
     case '.yaml':
     case '.yml':
-      return readConfigYAML(configPath, env);
+      return readConfigYAML(configPath, env, database);
       break;
     case '.json':
-      return readConfigJSON(configPath, env);
+      return readConfigJSON(configPath, env, database);
       break;
   }
 }
@@ -159,7 +158,7 @@ let program = require('commander').
   option('-s --snapshot', 'Snapshot the current database structure and data').
   option('-u --structure', 'Snapshot the current database structure').
   option('-r --restore', 'Restore the current database').
-  option('-d --database [database]', 'Database to snapshot from or restore to').
+  option('-d --database [database]', 'Database configuration to use (for multi-DB config)').
   option('-e --env [env]', 'Use a specific environment', defaultEnv()).
   option('-c --config [config]', 'Configuration file path', configPathDefault).
   option('-p --dir [dir]', 'Snapshot directory path to save to or read from', snapshotDirDefault).
@@ -168,6 +167,7 @@ let program = require('commander').
   option('-l --log', 'Log which commands are executed').
   option('-a --adapter [adapter]', 'Use database adapter (postgresql|mysql)').
   option('-t --test', 'Test the current configuration').
+  option('--target', 'Target database for importing').
   option('-v --verbose', 'Run in verbose mode', false).
   version(require('../package.json').version).
   parse(process.argv);
@@ -186,10 +186,10 @@ if (!fs.existsSync(options.config)) {
   process.exit(-12);
 }
 
-let config = readConfig(options.config, options.env);
+let config = readConfig(options.config, options.env, options.database);
 
 if (!config) {
-  console.error("Could not find configuration for environment '" + options.env + "' in config file '" + options.config + "'");
+  console.error(`Could not find configuration for environment ${options.env} in config file ${options.config}`);
 
   process.exit(-12);
 }
@@ -198,14 +198,15 @@ options.username = options.username || config.username;
 options.password = options.password || config.password;
 options.host = options.host || config.host;
 options.port = options.port || config.port;
-options.database = options.database || config.database;
+options.database = config.database;
+options.target ||= options.database;
 options.adapter = options.adapter || config.adapter || config.dialect || config.protocol;
 
 options.adapter = adapterMapping(options.adapter);
 
 // FIX: Whitelist adapter to avoid loading a non-existent file, or test that
 //      the file exists before loading.
-let handler = options.adapter && require('../lib/dbt/' + options.adapter + '/handler');
+let handler = options.adapter && require(`../lib/dbt/${options.adapter}/handler`);
 
 if (!options.database) {
   console.error("Could not determine which database to use");
@@ -240,6 +241,7 @@ if (options.info) {
   }
 
   console.log('   Database: ' + options.database);
+  console.log('     Target: ' + options.target);
   console.log('  Snapshots: ' + relativePath(options.dir));
 
   process.exit(0);
